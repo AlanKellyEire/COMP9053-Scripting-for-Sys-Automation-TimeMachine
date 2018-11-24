@@ -1,0 +1,12 @@
+./sourcefiles/a.txt:
+  copy_path: ./destinationfiles/2018-11-24 11:45:00-a.txt
+  last_copied: not_copied
+  modified: 1543059900.0
+./sourcefiles/b.txt:
+  copy_path: ./destinationfiles/2018-11-24 11:45:10-b.txt
+  last_copied: not_copied
+  modified: 1543059910.0
+./sourcefiles/c.txt:
+  copy_path: ./destinationfiles/2018-11-24 11:45:17-c.txt
+  last_copied: not_copied
+  modified: 1543059917.0

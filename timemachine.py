@@ -1,17 +1,11 @@
 import argparse
-import copy
-import yaml
 import os
 import datetime
 import logging
-import sys
 import fnmatch
 from shutil import copyfile
 
 from logging.handlers import RotatingFileHandler
-
-# parser.add_argument('-l','--list', action="store_true",
-# help='Print a list of the file being observed')
 
 LOG_FILENAME = 'timemachine.log'
 rotating_handler = RotatingFileHandler(LOG_FILENAME,
@@ -24,51 +18,32 @@ logger = logging.getLogger('ass2')
 logger.setLevel(logging.DEBUG)
 logger.addHandler(rotating_handler)
 
-def help():
-    print ("HELP SECTION")
-    print("Usage: python3 timemachine.py [OPTION...] [FILE]...")
-    print("")
-    print("  -b     [BACKUPPATH]   option used to add another backup path, full path must be provided if not in current directory ")
-    print("  -l                    lists all the files to be watched")
-    print("  -c     [CONFIGFILE]   option used to add another config file, full path must be provided if not in current directory ")
-    print("  -a     [FILETOADD]    option used to add another file to config file, full path must be provided if not in current directory")
-    print("  -a     [FILETOREMOVE] option used to remove file from config file, path must be identical to that in the config file")
-    print("  -h                    print help message")
-    print("")
-    print("")
-    print("EXAMPLE of use:")
-    print("")
-    print("python3 timemachine.py -c config.dat                 use config.dat as the config file")
-    print("python3 timemachine.py -b ./backups                  use the directory backups as the backups location")
-    print("python3 timemachine.py -r ./result.yml               remove /result.yml from files to watch")
-    print("python3 timemachine.py -a ./result.yml               add /result.yml to files to watch")
-    print("python3 timemachine.py -l                            list all files being watched")
-    print("")
-    print("")
-    print("GNU 'backup'")
 
-
+# fileExists function checks if the file passed exists
 def fileExists(file):
     return os.path.exists(file)
 
 
-def addFileToConfig(file, newLine):
+# addFileToConfig function adds file to the config
+def addFileToConfig(file, fileToAdd):
     with open(file, 'a') as appendFile:
-        appendFile.write('\n' + newLine)
+        appendFile.write('\n' + fileToAdd)
 
 
-def existsInFile(file, search):
+# existsInFile function checks if the file already exists in config
+def existsInFile(file, name):
     lines = readLines(file)
     for line in lines:
-        if line.decode('UTF-8').strip('\n') == search:
+        if line.decode('UTF-8').strip('\n') == name:
             return True
 
     return False
 
 
-def readLines(file):
+# readlines function reads the lines of the config file
+def readLines(configFile):
     try:
-        openFile = open(file, 'r')
+        openFile = open(configFile, 'r')
         lines = []
 
         for line in openFile:
@@ -76,21 +51,24 @@ def readLines(file):
 
         return lines
     except:
+        logger.error("Could not read from file {0}".format(configFile))
         return None
 
 
-def removeLineFromFile(file, removeLine):
-    r = open(file, 'rt')
+# removeFile function deleted the file from the config file
+def removeFile(configFile, file):
+    r = open(configFile, 'rt')
     lines = r.readlines()
     r.close()
 
-    w = open(file, 'wt')
+    w = open(configFile, 'wt')
     for line in lines:
-        if line.strip('\n') != removeLine:
+        if line.strip('\n') != file:
             w.write(line)
     w.close()
 
 
+# add function checks if file exists in config and adds file to config if it does not
 def add(configFile, file):
     if fileExists(file):
         if existsInFile(configFile, file):
@@ -105,49 +83,58 @@ def add(configFile, file):
         print("File {0} was not added to {1} as it does not exist".format(file, configFile))
 
 
+# remove function checks if file exists in config and removes file from config if it does
 def remove(configFile, file):
     if existsInFile(configFile, file):
-        removeLineFromFile(configFile, file)
+        removeFile(configFile, file)
         logger.warning("File {0} has been removed from the {1}".format(file, configFile))
         print("File {0} has been removed from the {1}".format(file, configFile))
     else:
         logger.error("File {0} not removed from {1} as it does not exists in the config file".format(file, configFile))
         print("File {0} not removed from {1} as it does not exists in the config file".format(file, configFile))
 
+
+# listFiles function gets list of files in the config
 def listFiles(configFile):
     files = readLines(configFile)
     return files
 
 
-def backup(storePath, config):
-    watching = listFiles(config)
+# backup function this checks if there is existing copies of the file and if not it backs copies them to the backup location with the modified time appended to the copied filed
+def backup(backUpLocation, config):
+    # gets list of files to watch
+    fileToWatch = listFiles(config)
 
-    for file in watching:
-
+    for file in fileToWatch:
+        # checks if file exists
         exists = os.path.isfile(file)
         if exists:
             mtime_actual = os.path.getmtime(file)
-
+            # converting filename and path to string
             decodedName = file.decode('UTF-8')
+            # getting just the filename, removing the path
             filename = decodedName[decodedName.rindex('/') + 1:]
-
-            if storePath[-1] != '/':
-                backPath = storePath + '/'
+            # adding the backslash to backup path if it does not exist
+            if backUpLocation[-1] != '/':
+                backPath = backUpLocation + '/'
             else:
-                backPath = storePath
+                backPath = backUpLocation
+            # getting list of current backups in the backup location
             listOfFiles = os.listdir(backPath)
             bool = 0
             for existingFilename in listOfFiles:
                 if bool == 0:
+                    # checking if any of the backups match this file
                     if fnmatch.fnmatch(str(existingFilename), '*' + filename):
-
+                        # checking if current version of this file is already backed up using the timestamp in the name
                         if str(datetime.datetime.fromtimestamp(mtime_actual)) in existingFilename:
                             bool = 1
                             logger.warning("Backup of File {0} already exists".format(file.decode('UTF-8')))
                         else:
                             bool = 1
                             logger.warning("Backup of File {0} created!!!".format(file.decode('UTF-8')))
-                            copyfile(file, storePath + '/' + str(
+                            # coping file to backup loaction if not none of the copies of this file are a backup of the current
+                            copyfile(file, backUpLocation + '/' + str(
                                 datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
         else:
@@ -156,9 +143,10 @@ def backup(storePath, config):
 
         if bool == 0:
             if exists:
-                print("copied", file.decode('UTF-8'))
+                # print("copied", file.decode('UTF-8'))
                 logger.warning("First backup of File {0} created!!!".format(file))
-                copyfile(file, storePath + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
+                copyfile(file,
+                         backUpLocation + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
 
 def main():
@@ -169,9 +157,33 @@ def main():
     parser.add_argument('-l', '--list', action='store_true', help='List all files currently in config file')
     parser.add_argument('-c', '--config', default='config.dat', help='configuration file for files')
     parser.add_argument('-b', '--path', default='./backup_files', help='path of backups location')
-    parser.add_argument('-h', '--help', help='provide help message')
 
     args = parser.parse_args()
+
+    #checks if config exists and creates if not
+    if not fileExists(args.config):
+        logger.error(
+            "config File {0} does not exist".format(args.config))
+        try:
+            logger.warning(
+                "creating config file {0}".format(args.config))
+            f = open(args.config, "w+")
+            f.close()
+        except:
+            logger.error(
+                "could not create config File {0}".format(args.config))
+
+    # checks if backup directory exists and creates if not
+    if not fileExists(args.path):
+        logger.error(
+            "Backup directory {0} does not exist".format(args.path))
+    try:
+        logger.warning(
+            "creating Backup directory {0}".format(args.path))
+        os.mkdir(args.path)
+    except:
+        logger.error(
+            "Could not created backup directory {0}".format(args.path))
 
     if args.remove:
         remove(args.config, args.remove)
@@ -183,8 +195,5 @@ def main():
     elif args.path:
         backup(args.path, args.config)
     else:
-        backup(args.path, args.config)
-        print('File is not in config file, Skipping remove')
-
-
+        backup(args.path, args.config)  # Calling the main function to start the program
 main()

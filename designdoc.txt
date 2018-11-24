@@ -1,0 +1,129 @@
+Student: Alan Kelly 
+Student Number: R00052131
+
+Assignment2: timemachine.py
+
+Modules imported - why
+argparse - used to parse the arguments pass to the program
+os - used to check if files exists
+datetime - used to get the date and time from the time
+logging - used for logging events in the program
+fnmatch - used to match file names
+copyfile - used to copy the files to the backup location
+
+----------------------------------------
+
+While section implemented the way they were
+1). arguments
+I considered 2 ways to parse the arguments one was getops which I was familiar with from a previous script and the other was argparse. In the end I went for arg parse as it I had never used it and from what I found duringg researching it was superior to getops.
+I started the arguments functions and wrote the args parser add commands for each one.
+I also hardcoded the log file/config file/back path name and location into the code
+All three will be saved in the same folder as the timemachine.py
+config.dat is the configfile 
+timemachine.log is the log file
+backup_files is the directory the copies will be saved.
+
+2). Reading and writing from file
+There was a couple of different method to used as a config file such as yaml, but in the end I went with just using having the each file to be monitored on its own line in the config file as I had difficulties when implementing the add/remove when using yaml. Just using a config file where each file was on a separate line allowed for simple read and write.
+I then created a function that reads from the config file.
+One that past tests I then moved on writing and deleting from the config file.
+While creating these functions I created a function that checks of the file exists in the config so multiple entries can not exist for the same file, as this will slow down the program with unnecessary repetition.
+I then tested these before moving on to creating the copy function.
+
+Commands to add or remove files to/from config.file
+- removing a file from config	
+python3 timemachine.py -r ./result.yml 
+- adding a file to config	
+python3 timemachine.py -a ./result.yml   
+
+
+3). Checking for changes and making copies
+First of all I thought about how to make sure overtime the program was ran that it would not make copies of files it already had up to date copies of.
+Initially I decided I was going to use the hash of the file as regardless of the name or timestamp it will still have the same hash if the contents were the same but as the spec said use the time I decided instead to add the time stamp of the file to the copy name. Then I could just check if there was a copy of the file with the same timestamp if so then do not copy. If there is not a copy with the current files modified timestamp I then take a copy of the file.
+before files are copied first it is confirmed they existed, then confirmed there is not already a copy of this version and then copied if no copy of this version exists.
+While creating the copy function I had created the code so it will pass whatever config is passed as an argument.
+
+-running the program
+python3 timemachine.py
+-running with custom config file
+python3 timemachine.py -c config.dat
+-running with custom backup directory
+python3 timemachine.py -b ./test
+
+
+4). Logging
+Again there was a couple of methods to do this such as simple writing to the log file like with the config file in the previous section but I decided in the end to use the logger library as it seemed superior and I did not run into trouble when implementing it.
+Then was logging. I used the coded from the demo assignment and added this to my own with some modification. I added logging for pretty much everything so you should be able to see from the log file any changes to the files and to the config file. 
+As previously mentioned the log file is in the same folder as the program and is called timemachine.log
+
+5). extras
+I have added a function that will list all the files to be watched.
+- command to list files to be watched
+python3 timemachine.py -l
+
+
+6). Run program every minute
+To monitor the files every minute a cron job was added to the crontab that runs the program every minute
+
+----------------------------------------
+
+Scenarios
+1). No default/custom config file exists
+ -Creates a default/custom config file
+2). No default/custom backup directory exists
+ -Creates a default/custom backup directory
+3). User try to remove a file from the config using the -r argument
+ -Checks if file is in config and removes if it exists and prints a message on the screen it then exits function. 
+ -If it does not exist it logs it to the log file and prints a message on the screen
+4). User try to add a file to the config using the -a argument
+ -Checks if file exists and if not logs  and prints a message on the screen it then exits function.
+ -If file is in config it adds it to the config and also logs and prints a message on the screen. 
+ -If it does exist in config it logs it to the log file and prints a message on the screen
+5). User wants to see all the watched files using -l
+ -prints the files in the config to the terminal
+6). User uses custom path for the backup using -b argument.
+ -if exists it will do just as if it was default path. If not exists it logs and creates the backup directory
+ -reads from config and checks if the files exist if it does not exist then it logs and moves to next file in config
+ -if files exist it then checks the backup directory to see if this version of the file has already been copied by comparing mtime vs copy name time.
+ -if copy does not exist it copies the file and adds the timestamp to the name and also logs the a copy was created. moves on to next file in config
+ -if copy exists it logs that a copy exists and moves on to next file in config   
+7). User uses custom config using -c argument.
+ -if exists it will do just as if it was default config. If not exists it logs and creates the config
+8). User just runs program with no arguments
+ -reads from config and checks if the files exist if it does not exist then it logs and moves to next file in config
+ -if files exist it then checks the backup directory to see if this version of the file has already been copied by comparing mtime vs copy name time.
+ -if copy does not exist it copies the file and adds the timestamp to the name and also logs the a copy was created. moves on to next file in config
+ -if copy exists it logs that a copy exists and moves on to next file in config
+
+----------------------------------------
+
+Testing
+To test if the tool was complete, I ran numerous tests to see how it would respond and if it did not respond like I wanted I would then modify the code until the result was what was desired.
+Tests
+- ran without existing config file and backup directory
+- ran with files that do not exist.
+- ran with files that there paths do not exist.
+- ran with copies of files existing and some not existing
+- tried to add files that do not exist to config
+- tired to add files that already existed in config
+- tired to add files that exist and are not in config
+- tried to remove files that do not exist in config
+- tried to remove files that do exist in config
+- ran with no arguments
+- ran with custom backup directory
+- ran with custom config
+- ran without existing config file
+- ran without existing backup directory
+- ran with -h argument
+- ran displaying the list
+
+----------------------------------------
+
+Assumptions
+
+1). Do not override the old backup files and create a new copy for each change in the file.
+2). everything logged to the log file
+3). Only absolute path to file name will be used
+4). limited information provided by the terminal of copying such as error or missing files as it is ran as a cron job.
+5). output of add/remove is shown on terminal and logs as these will be more than likely run manually.
+6). Validate everything
