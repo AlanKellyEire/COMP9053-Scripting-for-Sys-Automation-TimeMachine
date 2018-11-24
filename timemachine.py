@@ -3,13 +3,8 @@ import copy
 import yaml
 import os
 import datetime
-import re
-import pickle
-import sys
-import subprocess
 import logging
 import sys
-import glob
 import fnmatch
 from shutil import copyfile
 
@@ -25,152 +20,34 @@ rotating_handler = RotatingFileHandler(LOG_FILENAME,
 formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
 rotating_handler.setFormatter(formatter)
 
-logger = logging.getLogger('demoapp')
+logger = logging.getLogger('ass2')
 logger.setLevel(logging.DEBUG)
 logger.addHandler(rotating_handler)
 
-
-# def read_config(filename):
-#     try:
-#         logger.debug("Reading config from {0}".format(filename))
-#         with open(filename, "r") as f:
-#             first_line = f.readline()
-#             print(first_line)
-#             return yaml.load(f)
-#     except FileNotFoundError:
-#         logger.error("Config file {0} not found".format(filename))
-#         print("Config file {0} not found".format(filename), file=sys.stderr)
-#         sys.exit(1)
-#
-#
-# def list_of_files(self, config_files):
-#     file_paths = []
-#     for folders in config_files:
-#         path = folders["folder_path"]
-#         watch = folders["files"]
-#         for w in watch:
-#             file_paths.append("{0}/{1}".format(path, w))
-#             # print("{0}/{1}".format(path, w))
-#     return file_paths
-#
-#
-# def do_initial_copy(files):
-#     for copy_file in files.keys():
-#         if files[copy_file]["last_copied"] == "not_copied":
-#             print("copy_file")
-#             copy.Copy(copy_file, files[copy_file]["copy_path"])
-#             files[copy_file]["last_copied"] = files[copy_file]["modified"]
-#         else:
-#             print("any hit")
-#     return files
-#
-#
-# def read(filename):
-#     try:
-#         # logger.debug("Reading config from {0}".format(filename))
-#         with open(filename, "r") as f:
-#             first_line = f.readline()
-#             print(first_line)
-#             return yaml.load(f)
-#     except FileNotFoundError:
-#         # logger.error("Config file {0} not found".format(filename))
-#         print("Config file {0} not found".format(filename), file=sys.stderr)
-#         sys.exit(1)
-#
-#
-# def list_of_files(config_files):
-#     file_paths = []
-#     for folders in config_files:
-#         path = folders["folder_path"]
-#         watch = folders["files"]
-#         for w in watch:
-#             file_paths.append("{0}/{1}".format(path, w))
-#             # print("{0}/{1}".format(path, w))
-#     return file_paths
-#
-#
-# def watch_files(config_file_path):
-#     try:
-#         logger.debug("Reading config from {0}".format(config_file_path))
-#         config_file = read(config_file_path)
-#         file_paths = list_of_files(config_file["watch"])
-#         print(file_paths)
-#         print(config_file)
-#         # fileLog = logfile
-#         # logfile = config_file["log_file"]
-#         files = populate_files_to_watch(file_paths, config_file["backup_folder"])
-#         print(files)
-#         return files
-#     except:
-#         logger.error("Config file {0} not found".format(config_file_path))
-#         print("ERROR!!! with configuration file:", config_file_path)
-#         sys.exit(1)
-#
-#
-# def populate_files_to_watch(source_files, dest_path):
-#     files = filesToWatch
-#     print(files)
-#     for file in source_files:
-#         timestamp = os.path.getmtime(file)
-#         if file not in files.keys():
-#             files.update({file: {"modified": timestamp,
-#                                  "last_copied": "not_copied",
-#                                  "copy_path": "{0}/{1}-{2}".format(dest_path,
-#                                                                    datetime.datetime.fromtimestamp(timestamp),
-#                                                                    os.path.basename(file))
-#                                  }
-#                           })
-#         else:
-#             files[file]["modified"] = os.path.getmtime(file)
-#             files[file]["copy_path"] = "{0}/{1}-{2}".format(dest_path, datetime.datetime.fromtimestamp(timestamp),
-#                                                             os.path.basename(file))
-#     with open('result.yml', 'w') as yaml_file:
-#         yaml.dump(files, yaml_file, default_flow_style=False)
-#     return files
-#
-#
-# def copy(path, config_file):
-#     watching = ConfigurationService().getFilesToWatch(path, config_file)
-#
-#     for file in watching:
-#         if fileExists(file.getPath()):
-#             if file.isFileChanged():
-#                 CopyService().copyFileSnapshot(file)
-#         else:
-#             print('Warning: ' + file.getPath().decode('UTF-8') + ' does not exist, skipping')
-#
-#
-# def loadBackUpData(backupData_file):
-#     try:
-#         with open(backupData_file, 'r') as f:
-#             filesToWatch = yaml.load(f)
-#         logger.debug("Reading config from {0}".format(backupData_file))
-#     except:
-#         logger.error("Config file {0} not found".format(backupData_file))
-#
-#
-# def read_config(filename):
-#     try:
-#         logger.debug("Reading config from {0}".format(filename))
-#         with open(filename, "r") as f:
-#             first_line = f.readline()
-#             print(first_line)
-#             return yaml.load(f)
-#     except FileNotFoundError:
-#         logger.error("Config file {0} not found".format(filename))
-#         print("Config file {0} not found".format(filename), file=sys.stderr)
-#         sys.exit(1)
-#
-#
-# def create_copy(self, source_file_contents, destination_file_path):
-#     copy_file = open(destination_file_path, "w")
-#     for line in source_file_contents:
-#         copy_file.write(str(line))
-#         # log here
-#     copy_file.close()
+def help():
+    print ("HELP SECTION")
+    print("Usage: python3 timemachine.py [OPTION...] [FILE]...")
+    print("")
+    print("  -b     [BACKUPPATH]   option used to add another backup path, full path must be provided if not in current directory ")
+    print("  -l                    lists all the files to be watched")
+    print("  -c     [CONFIGFILE]   option used to add another config file, full path must be provided if not in current directory ")
+    print("  -a     [FILETOADD]    option used to add another file to config file, full path must be provided if not in current directory")
+    print("  -a     [FILETOREMOVE] option used to remove file from config file, path must be identical to that in the config file")
+    print("  -h                    print help message")
+    print("")
+    print("")
+    print("EXAMPLE of use:")
+    print("")
+    print("python3 timemachine.py -c config.dat                 use config.dat as the config file")
+    print("python3 timemachine.py -b ./backups                  use the directory backups as the backups location")
+    print("python3 timemachine.py -r ./result.yml               remove /result.yml from files to watch")
+    print("python3 timemachine.py -a ./result.yml               add /result.yml to files to watch")
+    print("python3 timemachine.py -l                            list all files being watched")
+    print("")
+    print("")
+    print("GNU 'backup'")
 
 
-############ do not delete
 def fileExists(file):
     return os.path.exists(file)
 
@@ -183,7 +60,7 @@ def addFileToConfig(file, newLine):
 def existsInFile(file, search):
     lines = readLines(file)
     for line in lines:
-        if line == search:
+        if line.decode('UTF-8').strip('\n') == search:
             return True
 
     return False
@@ -198,7 +75,7 @@ def readLines(file):
             lines.append(line.rstrip('\r\n').encode('utf-8'))
 
         return lines
-    except IOError:
+    except:
         return None
 
 
@@ -217,22 +94,25 @@ def removeLineFromFile(file, removeLine):
 def add(configFile, file):
     if fileExists(file):
         if existsInFile(configFile, file):
-            logger.debug("File {0} not added to config as it already exists".format(file))
+            logger.warning("File {0} not added to {1} as it already exists".format(file, configFile))
+            print("File {0} not added to {1} as it already exists".format(file, configFile))
         else:
             addFileToConfig(configFile, file)
-            logger.debug("File {0} added to config".format(file))
+            print("File {0} added to {1}".format(file, configFile))
+            logger.warning("File {0} added to {1}".format(file, configFile))
     else:
-        print('Unable to add, File does not exist')
+        logger.error("File {0} was not added to {1} as it does not exist".format(file, configFile))
+        print("File {0} was not added to {1} as it does not exist".format(file, configFile))
 
 
 def remove(configFile, file):
     if existsInFile(configFile, file):
         removeLineFromFile(configFile, file)
-        logger.debug("File {0} has been removed from the config".format(file))
+        logger.warning("File {0} has been removed from the {1}".format(file, configFile))
+        print("File {0} has been removed from the {1}".format(file, configFile))
     else:
-        logger.debug("File {0} not removed from config as it does not exists".format(file))
-        print("File {0} not removed from config as it does not exists".format(file))
-
+        logger.error("File {0} not removed from {1} as it does not exists in the config file".format(file, configFile))
+        print("File {0} not removed from {1} as it does not exists in the config file".format(file, configFile))
 
 def listFiles(configFile):
     files = readLines(configFile)
@@ -249,20 +129,36 @@ def backup(storePath, config):
             mtime_actual = os.path.getmtime(file)
 
             decodedName = file.decode('UTF-8')
-            filename = decodedName[decodedName.rindex('/')+1:]
-            print(storePath[-1])
+            filename = decodedName[decodedName.rindex('/') + 1:]
+
             if storePath[-1] != '/':
                 backPath = storePath + '/'
             else:
                 backPath = storePath
             listOfFiles = os.listdir(backPath)
-            for entry in listOfFiles:
-                if fnmatch.fnmatch(entry, '*' + filename):
-                    if str(datetime.datetime.fromtimestamp(mtime_actual)) in entry:
-                        logger.debug("Backup of File {0} already exists".format(file))
-                    else:
-                        logger.debug("Backup of File {0} created!!!".format(file))
-                        copyfile(file, storePath + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
+            bool = 0
+            for existingFilename in listOfFiles:
+                if bool == 0:
+                    if fnmatch.fnmatch(str(existingFilename), '*' + filename):
+
+                        if str(datetime.datetime.fromtimestamp(mtime_actual)) in existingFilename:
+                            bool = 1
+                            logger.warning("Backup of File {0} already exists".format(file.decode('UTF-8')))
+                        else:
+                            bool = 1
+                            logger.warning("Backup of File {0} created!!!".format(file.decode('UTF-8')))
+                            copyfile(file, storePath + '/' + str(
+                                datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
+
+        else:
+            logger.error(
+                "Backup of File {0} could not be completed as the file does not exist".format(file.decode('UTF-8')))
+
+        if bool == 0:
+            if exists:
+                print("copied", file.decode('UTF-8'))
+                logger.warning("First backup of File {0} created!!!".format(file))
+                copyfile(file, storePath + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
 
 def main():
@@ -273,6 +169,7 @@ def main():
     parser.add_argument('-l', '--list', action='store_true', help='List all files currently in config file')
     parser.add_argument('-c', '--config', default='config.dat', help='configuration file for files')
     parser.add_argument('-b', '--path', default='./backup_files', help='path of backups location')
+    parser.add_argument('-h', '--help', help='provide help message')
 
     args = parser.parse_args()
 
