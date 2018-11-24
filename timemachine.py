@@ -10,6 +10,8 @@ import subprocess
 import logging
 import sys
 import glob
+import fnmatch
+from shutil import copyfile
 
 from logging.handlers import RotatingFileHandler
 
@@ -28,144 +30,144 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(rotating_handler)
 
 
-def read_config(filename):
-    try:
-        logger.debug("Reading config from {0}".format(filename))
-        with open(filename, "r") as f:
-            first_line = f.readline()
-            print(first_line)
-            return yaml.load(f)
-    except FileNotFoundError:
-        logger.error("Config file {0} not found".format(filename))
-        print("Config file {0} not found".format(filename), file=sys.stderr)
-        sys.exit(1)
-
-
-def list_of_files(self, config_files):
-    file_paths = []
-    for folders in config_files:
-        path = folders["folder_path"]
-        watch = folders["files"]
-        for w in watch:
-            file_paths.append("{0}/{1}".format(path, w))
-            # print("{0}/{1}".format(path, w))
-    return file_paths
-
-
-def do_initial_copy(files):
-    for copy_file in files.keys():
-        if files[copy_file]["last_copied"] == "not_copied":
-            print("copy_file")
-            copy.Copy(copy_file, files[copy_file]["copy_path"])
-            files[copy_file]["last_copied"] = files[copy_file]["modified"]
-        else:
-            print("any hit")
-    return files
-
-
-def read(filename):
-    try:
-        # logger.debug("Reading config from {0}".format(filename))
-        with open(filename, "r") as f:
-            first_line = f.readline()
-            print(first_line)
-            return yaml.load(f)
-    except FileNotFoundError:
-        # logger.error("Config file {0} not found".format(filename))
-        print("Config file {0} not found".format(filename), file=sys.stderr)
-        sys.exit(1)
-
-
-def list_of_files(config_files):
-    file_paths = []
-    for folders in config_files:
-        path = folders["folder_path"]
-        watch = folders["files"]
-        for w in watch:
-            file_paths.append("{0}/{1}".format(path, w))
-            # print("{0}/{1}".format(path, w))
-    return file_paths
-
-
-def watch_files(config_file_path):
-    try:
-        logger.debug("Reading config from {0}".format(config_file_path))
-        config_file = read(config_file_path)
-        file_paths = list_of_files(config_file["watch"])
-        print(file_paths)
-        print(config_file)
-        # fileLog = logfile
-        # logfile = config_file["log_file"]
-        files = populate_files_to_watch(file_paths, config_file["backup_folder"])
-        print(files)
-        return files
-    except:
-        logger.error("Config file {0} not found".format(config_file_path))
-        print("ERROR!!! with configuration file:", config_file_path)
-        sys.exit(1)
-
-
-def populate_files_to_watch(source_files, dest_path):
-    files = filesToWatch
-    print(files)
-    for file in source_files:
-        timestamp = os.path.getmtime(file)
-        if file not in files.keys():
-            files.update({file: {"modified": timestamp,
-                                 "last_copied": "not_copied",
-                                 "copy_path": "{0}/{1}-{2}".format(dest_path,
-                                                                   datetime.datetime.fromtimestamp(timestamp),
-                                                                   os.path.basename(file))
-                                 }
-                          })
-        else:
-            files[file]["modified"] = os.path.getmtime(file)
-            files[file]["copy_path"] = "{0}/{1}-{2}".format(dest_path, datetime.datetime.fromtimestamp(timestamp),
-                                                            os.path.basename(file))
-    with open('result.yml', 'w') as yaml_file:
-        yaml.dump(files, yaml_file, default_flow_style=False)
-    return files
-
-
-def copy(path, config_file):
-    watching = ConfigurationService().getFilesToWatch(path, config_file)
-
-    for file in watching:
-        if fileExists(file.getPath()):
-            if file.isFileChanged():
-                CopyService().copyFileSnapshot(file)
-        else:
-            print('Warning: ' + file.getPath().decode('UTF-8') + ' does not exist, skipping')
-
-
-def loadBackUpData(backupData_file):
-    try:
-        with open(backupData_file, 'r') as f:
-            filesToWatch = yaml.load(f)
-        logger.debug("Reading config from {0}".format(backupData_file))
-    except:
-        logger.error("Config file {0} not found".format(backupData_file))
-
-
-def read_config(filename):
-    try:
-        logger.debug("Reading config from {0}".format(filename))
-        with open(filename, "r") as f:
-            first_line = f.readline()
-            print(first_line)
-            return yaml.load(f)
-    except FileNotFoundError:
-        logger.error("Config file {0} not found".format(filename))
-        print("Config file {0} not found".format(filename), file=sys.stderr)
-        sys.exit(1)
-
-
-def create_copy(self, source_file_contents, destination_file_path):
-    copy_file = open(destination_file_path, "w")
-    for line in source_file_contents:
-        copy_file.write(str(line))
-        # log here
-    copy_file.close()
+# def read_config(filename):
+#     try:
+#         logger.debug("Reading config from {0}".format(filename))
+#         with open(filename, "r") as f:
+#             first_line = f.readline()
+#             print(first_line)
+#             return yaml.load(f)
+#     except FileNotFoundError:
+#         logger.error("Config file {0} not found".format(filename))
+#         print("Config file {0} not found".format(filename), file=sys.stderr)
+#         sys.exit(1)
+#
+#
+# def list_of_files(self, config_files):
+#     file_paths = []
+#     for folders in config_files:
+#         path = folders["folder_path"]
+#         watch = folders["files"]
+#         for w in watch:
+#             file_paths.append("{0}/{1}".format(path, w))
+#             # print("{0}/{1}".format(path, w))
+#     return file_paths
+#
+#
+# def do_initial_copy(files):
+#     for copy_file in files.keys():
+#         if files[copy_file]["last_copied"] == "not_copied":
+#             print("copy_file")
+#             copy.Copy(copy_file, files[copy_file]["copy_path"])
+#             files[copy_file]["last_copied"] = files[copy_file]["modified"]
+#         else:
+#             print("any hit")
+#     return files
+#
+#
+# def read(filename):
+#     try:
+#         # logger.debug("Reading config from {0}".format(filename))
+#         with open(filename, "r") as f:
+#             first_line = f.readline()
+#             print(first_line)
+#             return yaml.load(f)
+#     except FileNotFoundError:
+#         # logger.error("Config file {0} not found".format(filename))
+#         print("Config file {0} not found".format(filename), file=sys.stderr)
+#         sys.exit(1)
+#
+#
+# def list_of_files(config_files):
+#     file_paths = []
+#     for folders in config_files:
+#         path = folders["folder_path"]
+#         watch = folders["files"]
+#         for w in watch:
+#             file_paths.append("{0}/{1}".format(path, w))
+#             # print("{0}/{1}".format(path, w))
+#     return file_paths
+#
+#
+# def watch_files(config_file_path):
+#     try:
+#         logger.debug("Reading config from {0}".format(config_file_path))
+#         config_file = read(config_file_path)
+#         file_paths = list_of_files(config_file["watch"])
+#         print(file_paths)
+#         print(config_file)
+#         # fileLog = logfile
+#         # logfile = config_file["log_file"]
+#         files = populate_files_to_watch(file_paths, config_file["backup_folder"])
+#         print(files)
+#         return files
+#     except:
+#         logger.error("Config file {0} not found".format(config_file_path))
+#         print("ERROR!!! with configuration file:", config_file_path)
+#         sys.exit(1)
+#
+#
+# def populate_files_to_watch(source_files, dest_path):
+#     files = filesToWatch
+#     print(files)
+#     for file in source_files:
+#         timestamp = os.path.getmtime(file)
+#         if file not in files.keys():
+#             files.update({file: {"modified": timestamp,
+#                                  "last_copied": "not_copied",
+#                                  "copy_path": "{0}/{1}-{2}".format(dest_path,
+#                                                                    datetime.datetime.fromtimestamp(timestamp),
+#                                                                    os.path.basename(file))
+#                                  }
+#                           })
+#         else:
+#             files[file]["modified"] = os.path.getmtime(file)
+#             files[file]["copy_path"] = "{0}/{1}-{2}".format(dest_path, datetime.datetime.fromtimestamp(timestamp),
+#                                                             os.path.basename(file))
+#     with open('result.yml', 'w') as yaml_file:
+#         yaml.dump(files, yaml_file, default_flow_style=False)
+#     return files
+#
+#
+# def copy(path, config_file):
+#     watching = ConfigurationService().getFilesToWatch(path, config_file)
+#
+#     for file in watching:
+#         if fileExists(file.getPath()):
+#             if file.isFileChanged():
+#                 CopyService().copyFileSnapshot(file)
+#         else:
+#             print('Warning: ' + file.getPath().decode('UTF-8') + ' does not exist, skipping')
+#
+#
+# def loadBackUpData(backupData_file):
+#     try:
+#         with open(backupData_file, 'r') as f:
+#             filesToWatch = yaml.load(f)
+#         logger.debug("Reading config from {0}".format(backupData_file))
+#     except:
+#         logger.error("Config file {0} not found".format(backupData_file))
+#
+#
+# def read_config(filename):
+#     try:
+#         logger.debug("Reading config from {0}".format(filename))
+#         with open(filename, "r") as f:
+#             first_line = f.readline()
+#             print(first_line)
+#             return yaml.load(f)
+#     except FileNotFoundError:
+#         logger.error("Config file {0} not found".format(filename))
+#         print("Config file {0} not found".format(filename), file=sys.stderr)
+#         sys.exit(1)
+#
+#
+# def create_copy(self, source_file_contents, destination_file_path):
+#     copy_file = open(destination_file_path, "w")
+#     for line in source_file_contents:
+#         copy_file.write(str(line))
+#         # log here
+#     copy_file.close()
 
 
 ############ do not delete
@@ -234,46 +236,34 @@ def remove(configFile, file):
 
 def listFiles(configFile):
     files = readLines(configFile)
-    #for file in files:
-     #   print(file)
     return files
 
 
 def backup(storePath, config):
     watching = listFiles(config)
-#
-#     for file in watching:
-#         print("file ", file)
-#         exists = os.path.isfile(file)
-#         if exists:
-#             mtime_actual = os.path.getmtime(file)
-#             # backUps = [
-#             filename = file[file.rindex('/')+1:]
-#             print(filename)
-#             for name in glob.glob(storePath + "*" + filename):
-#                 print
-#                 '\t', name
-#                 # backups = [fn for fn in os.listdir(storePath)
-#     # if any(fn.endswith(ext) for ext in file)]
-#     # if mtime_actual not in backups:
-#     #     newName = storePath + mtime_actual + ' : ' + file
-#     #     copy.Copy(file, newName)
-#
-#         else:
-#             print ("tesrt")
-#             #print('Warning: ' + file.getPath().decode('UTF-8') + ' does not exist, skipping')  # def getFiles(backUpLoc, configFile):
-#
-#
-# #         files = readLines(configFile)
-# #         watchingFiles = []
-# #         n = 1
-# #         for file in files:
-# #             # print(n)
-# #             # print(file)
-# #             # n += 1
-# #             watchingFiles.append(file)
-# #         print(watchingFiles)
-# #         return watchingFiles
+
+    for file in watching:
+
+        exists = os.path.isfile(file)
+        if exists:
+            mtime_actual = os.path.getmtime(file)
+
+            decodedName = file.decode('UTF-8')
+            filename = decodedName[decodedName.rindex('/')+1:]
+            print(storePath[-1])
+            if storePath[-1] != '/':
+                backPath = storePath + '/'
+            else:
+                backPath = storePath
+            listOfFiles = os.listdir(backPath)
+            for entry in listOfFiles:
+                if fnmatch.fnmatch(entry, '*' + filename):
+                    if str(datetime.datetime.fromtimestamp(mtime_actual)) in entry:
+                        logger.debug("Backup of File {0} already exists".format(file))
+                    else:
+                        logger.debug("Backup of File {0} created!!!".format(file))
+                        copyfile(file, storePath + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
+
 
 def main():
     parser = argparse.ArgumentParser()
