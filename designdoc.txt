@@ -63,7 +63,8 @@ python3 timemachine.py -l
 
 
 6). Run program every minute
-To monitor the files every minute a cron job was added to the crontab that runs the program every minute
+I wrote the command below to create the cron job to run every minute, below is a breakdown of the command. For more information see Cron.txt
+echo "* * * * * /usr/bin/python3 $PWD/timemachine.py -c $PWD/config.dat -b $PWD/backups  >> $PWD/tmcronlog.txt 2>&1" | crontab
 
 ----------------------------------------
 
@@ -127,3 +128,4 @@ Assumptions
 4). limited information provided by the terminal of copying such as error or missing files as it is ran as a cron job.
 5). output of add/remove is shown on terminal and logs as these will be more than likely run manually.
 6). Validate everything
+7). All files are in the current working directory for the cron job and user know command will overwrite existing

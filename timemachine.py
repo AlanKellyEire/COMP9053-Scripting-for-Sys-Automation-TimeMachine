@@ -97,6 +97,7 @@ def remove(configFile, file):
 # listFiles function gets list of files in the config
 def listFiles(configFile):
     files = readLines(configFile)
+    logger.warning("Config {0} has been read from".format(configFile))
     return files
 
 
@@ -148,6 +149,8 @@ def backup(backUpLocation, config):
                 copyfile(file,
                          backUpLocation + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
+    logger.warning("all files in Config {0} copies up to date".format(config))
+    logger.warning("Exiting")
 
 def main():
     parser = argparse.ArgumentParser()
