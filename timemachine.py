@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse
 import os
 import datetime
@@ -8,9 +9,7 @@ from shutil import copyfile
 from logging.handlers import RotatingFileHandler
 
 LOG_FILENAME = 'timemachine.log'
-rotating_handler = RotatingFileHandler(LOG_FILENAME,
-                                       maxBytes=10000000,
-                                       backupCount=3)
+rotating_handler = RotatingFileHandler(LOG_FILENAME, maxBytes=10000000, backupCount=3)
 formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
 rotating_handler.setFormatter(formatter)
 
@@ -107,6 +106,7 @@ def backup(backUpLocation, config):
     fileToWatch = listFiles(config)
 
     for file in fileToWatch:
+        bool = 0
         # checks if file exists
         exists = os.path.isfile(file)
         if exists:
@@ -122,7 +122,7 @@ def backup(backUpLocation, config):
                 backPath = backUpLocation
             # getting list of current backups in the backup location
             listOfFiles = os.listdir(backPath)
-            bool = 0
+            # print("file = : ", filename)
             for existingFilename in listOfFiles:
                 if bool == 0:
                     # checking if any of the backups match this file
@@ -131,26 +131,24 @@ def backup(backUpLocation, config):
                         if str(datetime.datetime.fromtimestamp(mtime_actual)) in existingFilename:
                             bool = 1
                             logger.warning("Backup of File {0} already exists".format(file.decode('UTF-8')))
-                        else:
-                            bool = 1
-                            logger.warning("Backup of File {0} created!!!".format(file.decode('UTF-8')))
-                            # coping file to backup loaction if not none of the copies of this file are a backup of the current
-                            copyfile(file, backUpLocation + '/' + str(
-                                datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
         else:
             logger.error(
                 "Backup of File {0} could not be completed as the file does not exist".format(file.decode('UTF-8')))
 
         if bool == 0:
+            #print("file = : ", file)
+            #print("exists = :", exists)
             if exists:
                 # print("copied", file.decode('UTF-8'))
-                logger.warning("First backup of File {0} created!!!".format(file))
+                logger.warning("Created backup of File {0}!!!".format(file.decode('UTF-8')))
                 copyfile(file,
                          backUpLocation + '/' + str(datetime.datetime.fromtimestamp(mtime_actual)) + ' ' + filename)
 
     logger.warning("all files in Config {0} copies up to date".format(config))
     logger.warning("Exiting")
+    exit()
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -163,7 +161,7 @@ def main():
 
     args = parser.parse_args()
 
-    #checks if config exists and creates if not
+    # checks if config exists and creates if not
     if not fileExists(args.config):
         logger.error(
             "config File {0} does not exist".format(args.config))
@@ -180,13 +178,12 @@ def main():
     if not fileExists(args.path):
         logger.error(
             "Backup directory {0} does not exist".format(args.path))
-    try:
-        logger.warning(
-            "creating Backup directory {0}".format(args.path))
-        os.mkdir(args.path)
-    except:
-        logger.error(
-            "Could not created backup directory {0}".format(args.path))
+        try:
+            logger.warning(
+                "creating Backup directory {0}".format(args.path))
+            os.mkdir(args.path)
+        except:
+            logger.error("Could not created backup directory {0}".format(args.path))
 
     if args.remove:
         remove(args.config, args.remove)
@@ -198,5 +195,8 @@ def main():
     elif args.path:
         backup(args.path, args.config)
     else:
-        backup(args.path, args.config)  # Calling the main function to start the program
+        backup(args.path, args.config)
+
+
+# Calling the main function to start the program
 main()
